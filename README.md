@@ -5,7 +5,7 @@ Reference implementation in [Go](http://golang.org/) of a barebones SPDY/HTTPS p
 
 Thanks to Jamie Hall, David Anderson and Derrick McKee for their help and contributions to how this proxy server idea and implementation.
 
-This project is an extracion from a larger Amahi project. It uses Jamie's excellent [SlyMarbo/spdy](https://github.com/SlyMarbo/spdy/) SPDY library.
+This project is an extracion from a larger Amahi project and Jamie did this code based on a description of how the Amahi project was architected. It uses Jamie's excellent [SlyMarbo/spdy](https://github.com/SlyMarbo/spdy/) SPDY library.
 
 Intro
 =====
