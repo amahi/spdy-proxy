@@ -1,7 +1,7 @@
 SPDY Proxy
 ==========
 
-Reference implementation of a barebones SPDY/HTTPS proxying server for (semi-)permanently connected back-end servers.
+Reference implementation in [Go](http://golang.org/) of a barebones SPDY/HTTPS proxying server for (semi-)permanently connected back-end servers.
 
 Thanks to Jamie Hall, David Anderson and Derrick McKee for their help and contributions to how this proxy server idea was implementation.
 
@@ -28,7 +28,7 @@ Once H ends the connection, C's SPDY connection is kept and reused for any other
 	v
 	C	Client device that semi-permanently connect to P, then become Servers for H
 
-It uses the excellent SlyMarbo/spdy library.
+It uses the excellent [SlyMarbo/spdy](https://github.com/SlyMarbo/spdy/) SPDY library.
 
 Both the server to H and the interface with C support SPDY.
 
