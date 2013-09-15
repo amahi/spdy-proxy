@@ -19,6 +19,9 @@ type responseCopier struct {
 }
 
 func (r *responseCopier) ReceiveData(_ *http.Request, data []byte, final bool) {
+	if data == nil || len(data) == 0 {
+		return
+	}
 	_, err := r.w.Write(data)
 	if err != nil {
 		r.s.Close()
@@ -62,8 +65,20 @@ type Proxy struct {
 }
 
 func (p *Proxy) RequestFromC(w http.ResponseWriter, r *http.Request) error {
+	if p.conn == nil {
+		fmt.Println("Warning: Could not serve request because C is not connected.")
+		http.NotFound(w, r)
+		return nil
+	}
+
 	copier := new(responseCopier)
 	copier.w = w
+	if u.Host == "" {
+		u.Host = HOST_PORT_API
+	}
+	if u.Scheme == "" {
+		u.Scheme = "https"
+	}
 	stream, err := p.conn.Request(r, copier, spdy.DefaultPriority(r.URL))
 	if err != nil {
 		return err
@@ -97,9 +112,10 @@ func (p *Proxy) ServeC(w http.ResponseWriter, r *http.Request) {
 	res.ProtoMajor = 1
 	res.ProtoMinor = 1
 	buf.Reset()
-	buf.WriteString("sup")
+	message := "Hello from P"
+	buf.WriteString(message)
 	res.Body = buf
-	res.ContentLength = int64(len("sup"))
+	res.ContentLength = int64(len(message))
 	handle(res.Write(conn))
 
 	// prepare for serving requests from H.
@@ -107,7 +123,7 @@ func (p *Proxy) ServeC(w http.ResponseWriter, r *http.Request) {
 	handle(err)
 	p.conn = client
 	fmt.Println("Ready")
-	go client.Run()
+	client.Run()
 }
 
 func (p *Proxy) ServeH(w http.ResponseWriter, r *http.Request) {
