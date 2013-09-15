@@ -1,7 +1,7 @@
 SPDY Proxy
 ==========
 
-Reference implementation in [Go](http://golang.org/) of a barebones SPDY/HTTPS proxying server for (semi-)permanently connected back-end servers.
+Reference implementation in [Go](http://golang.org/) of a proxy server for (semi-)permanently connected back-end servers, supporting SPDY and HTTPS.
 
 Thanks to Jamie Hall, David Anderson and Derrick McKee for their help and contributions to how this proxy server idea and implementation.
 
