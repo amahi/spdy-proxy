@@ -3,9 +3,11 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/SlyMarbo/spdy"
 	"io"
 	"net/http"
-	"github.com/SlyMarbo/spdy"
+	"strconv"
+	"strings"
 )
 
 const HOST_PORT_API = "localhost:1443"
@@ -33,6 +35,17 @@ func (r *responseCopier) ReceiveHeader(_ *http.Request, header http.Header) {
 	for key, values := range header {
 		for _, value := range values {
 			h.Add(key, value)
+			if key == ":status" {
+				if i := strings.Index(value, " "); i > 0 {
+					value = value[:i]
+				}
+				status, err := strconv.Atoi(value)
+				if err != nil {
+					fmt.Printf("Warning: Failed to parse status code %q.\n", value)
+					continue
+				}
+				r.w.WriteHeader(status)
+			}
 		}
 	}
 }
