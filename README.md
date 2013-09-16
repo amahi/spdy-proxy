@@ -30,4 +30,30 @@ Once H ends the connection, C's SPDY connection is kept and reused for any other
 
 Both the server to H and the interface with C support SPDY.
 
+Testing
+=======
+
+To test, run, e.g. in two separate windows, the client and the server:
+
+    $ ./bin/p
+    
+    $ ./bin/c
+    
+You should see messages that they are connected. Then, in a third window, run the tests:
+
+    $ cd integration-tests
+    $ make
+    Testing test-01-basic-root-dir-listing.sh
+    PASS
+    Testing test-02-image.sh
+    PASS
+    Testing test-03-video-avi.sh
+    PASS
+    Testing test-04-video-mkv.sh
+    PASS
+    Testing test-05-video-mp4.sh
+    PASS
+    
+To add tests, see how these are added and follow the pattern. For control flow and concurrency tests, there may be more complex things that need to be done, for example using expect, killing connections, simultaneously starting connections, etc.
+
 (C) 2013, Amahi
