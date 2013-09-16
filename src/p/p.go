@@ -73,6 +73,7 @@ func (p *Proxy) RequestFromC(w http.ResponseWriter, r *http.Request) error {
 
 	copier := new(responseCopier)
 	copier.w = w
+	u := r.URL
 	if u.Host == "" {
 		u.Host = HOST_PORT_API
 	}
