@@ -17,8 +17,8 @@ func handle(err error) {
 	}
 }
 
-const HOST_PORT = "proxy.example.com:1444"
-const DIR_TO_SERVE = "."
+const HOST_PORT = "localhost:1444"
+const DIR_TO_SERVE = "./media"
 
 func main() {
 	// connect to P

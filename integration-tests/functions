@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# basic settings and functions
+
+base_url="https://localhost:1443"
+
+debug=""
+# debug=-v
+
+function pass() { echo "PASS" && exit 0; }
+function fail() { echo "FAIL" && exit 1; }
+function valid_sum() {
+	s=$1;
+	f=${2:-"/tmp/downloaded"};
+	if [ "$f" = "/tmp/test.header" ]; then
+		sum=`grep -v Date "$f" | shasum | awk '{print $1}'`;
+	else
+		sum=`shasum "$f" | awk '{print $1}'`;
+	fi;
+
+	if [ "$sum" = "$s" ]; then
+		return 0;
+	else
+		return 1;
+	fi;
+}
+function initialize () {
+	rm -f /tmp/downloaded /tmp/test.header;
+}
+
+# clean up before starting
+initialize;

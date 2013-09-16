@@ -8,8 +8,8 @@ import (
 	"github.com/SlyMarbo/spdy"
 )
 
-const HOST_PORT_API = "proxy.example.com:1444"
-const HOST_PORT_SERVERS = "proxy.example.com:1443"
+const HOST_PORT_API = "localhost:1443"
+const HOST_PORT_SERVERS = "localhost:1444"
 
 // responseCopier does the copying of the request
 // from H to C and the response from C to H.
@@ -137,13 +137,13 @@ func main() {
 
 	proxy := new(Proxy)
 	http.HandleFunc("/", proxy.ServeC)
-	go http.ListenAndServeTLS(HOST_PORT_API, certFile, keyFile, nil) // Serve C
+	go http.ListenAndServeTLS(HOST_PORT_SERVERS, certFile, keyFile, nil) // Serve C
 
 	hServe := new(http.Server)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", proxy.ServeH)
 	hServe.Handler = mux
-	hServe.Addr = HOST_PORT_SERVERS
+	hServe.Addr = HOST_PORT_API
 	spdy.AddSPDY(hServe)
 	handle(hServe.ListenAndServeTLS(certFile, keyFile)) // Serve H
 }
