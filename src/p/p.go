@@ -141,7 +141,10 @@ func (p *Proxy) ServeC(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Proxy) ServeH(w http.ResponseWriter, r *http.Request) {
-	handle(p.RequestFromC(w, r))
+	err := p.RequestFromC(w, r)
+	if err != nil {
+		fmt.Println("Encountered an error serving API request:", err)
+	}
 }
 
 func main() {
