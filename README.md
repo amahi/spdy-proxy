@@ -12,13 +12,13 @@ Intro
 
 This is a proxy server process P and a back-end client for it C.
 
-The proxy P serves (on two ports) a client (front-end) API to , called H.
+The proxy P serves (on two ports) a client (front-end) API to serve requests from clients, called A.
 
-The C (server) is a client that connects to P semi-permanently. Once it's connected, H calls are proxy'd to C, with TLS and SPDY, with C becoming a server for H. 
+The C (server) is a client that connects to P semi-permanently. Once it's connected, A calls are proxy'd to C, with TLS and SPDY, with C becoming a server for H. 
 
-Once H ends the connection, C's SPDY connection is kept and reused for any other calls with H. Each call from H is funnelled to C via a SPDY stream.
+Once A ends the connection, C's SPDY connection is kept and reused for any other calls with A. Each call from A is funnelled to C via a SPDY stream.
 
-	H	Proxy clients
+	A	Proxy clients
 	^
 	|
 	v
@@ -26,9 +26,9 @@ Once H ends the connection, C's SPDY connection is kept and reused for any other
 	^
 	|
 	v
-	C	Client device that semi-permanently connect to P, then become Servers for H
+	C	Client device that semi-permanently connect to P, then become Servers for A
 
-Both the server to H and the interface with C support SPDY.
+Both the server to A and the interface with C support SPDY.
 
 Testing
 =======
