@@ -14,7 +14,7 @@ This is a proxy server process P and a back-end client for it C.
 
 The proxy P serves (on two ports) a client (front-end) API to serve requests from clients, called A.
 
-The C (server) is a client that connects to P semi-permanently. Once it's connected, A calls are proxy'd to C, with TLS and SPDY, with C becoming a server for H. 
+The C (server) is a client that connects to P semi-permanently. Once it's connected, A calls are proxy'd to C, with TLS and SPDY, with C becoming a server for A. 
 
 Once A ends the connection, C's SPDY connection is kept and reused for any other calls with A. Each call from A is funnelled to C via a SPDY stream.
 
