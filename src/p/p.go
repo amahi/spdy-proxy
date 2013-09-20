@@ -32,6 +32,7 @@ func (r *responseCopier) ReceiveData(_ *http.Request, data []byte, final bool) {
 
 func (r *responseCopier) ReceiveHeader(_ *http.Request, header http.Header) {
 	h := r.w.Header()
+	status := -1
 	for key, values := range header {
 		for _, value := range values {
 			h.Add(key, value)
@@ -39,14 +40,17 @@ func (r *responseCopier) ReceiveHeader(_ *http.Request, header http.Header) {
 				if i := strings.Index(value, " "); i > 0 {
 					value = value[:i]
 				}
-				status, err := strconv.Atoi(value)
+				s, err := strconv.Atoi(value)
 				if err != nil {
 					fmt.Printf("Warning: Failed to parse status code %q.\n", value)
 					continue
 				}
-				r.w.WriteHeader(status)
+				status = s
 			}
 		}
+	}
+	if status > 0 {
+		r.w.WriteHeader(status)
 	}
 }
 
