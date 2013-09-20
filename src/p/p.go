@@ -14,6 +14,8 @@ import (
 const HOST_PORT_API = "localhost:1443"
 const HOST_PORT_SERVERS = "localhost:1444"
 
+var incoming, serving int
+
 // responseCopier does the copying of the request
 // from H to C and the response from C to H.
 type responseCopier struct {
@@ -98,12 +100,17 @@ func (p *Proxy) RequestFromC(w http.ResponseWriter, r *http.Request) error {
 	if u.Scheme == "" {
 		u.Scheme = "https"
 	}
+	incoming++
 	stream, err := p.conn.Request(r, copier, spdy.DefaultPriority(r.URL))
 	if err != nil {
 		return err
 	}
 	copier.s = stream
-	return stream.Run()
+	serving++
+	ret := stream.Run()
+	incoming--
+	serving--
+	return ret
 }
 
 func (p *Proxy) ServeC(w http.ResponseWriter, r *http.Request) {
@@ -152,6 +159,10 @@ func (p *Proxy) ServeA(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (p *Proxy) DebugURL(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "incoming: %d\nserving: %d\n", incoming, serving)
+}
+
 func main() {
 	certFile := "cert.pem"
 	keyFile := "cert.key"
@@ -166,6 +177,7 @@ func main() {
 	hServe := new(http.Server)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", proxy.ServeA)
+	mux.HandleFunc("/debug", proxy.DebugURL)
 	hServe.Handler = mux
 	hServe.Addr = HOST_PORT_API
 	if *tls {
