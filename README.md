@@ -56,4 +56,14 @@ You should see messages that they are connected. Then, in a third window, run th
     
 To add tests, see how these are added and follow the pattern. For control flow and concurrency tests, there may be more complex things that need to be done, for example using expect, killing connections, simultaneously starting connections, etc.
 
+Design
+======
+
+The system works by creating a gateway between 1 connection to C and n connections to As.
+This uses Go's `net/http` package design to simplify the interfaces. The system starts by opening
+a port with which servers may connect. When a C connects, it does so as a client, with the proxy
+(P) fulfilling the role of server. At this point, a brief authentication phasetakes place, using
+an HTTPS PUT request. Once this request has completed, the underlying TLSconnection is hijacked
+by the application at both ends. This is then repurposed as a SPDY connection where C is the server
+
 (C) 2013, Amahi
