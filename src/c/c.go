@@ -22,6 +22,7 @@ const DIR_TO_SERVE = "./media"
 
 func main() {
 	for {
+		const SLEEP_RETRY = 5
 		var conn *tls.Conn
 		var err error
 		for i := 0; i < 10; i++ {
@@ -34,8 +35,8 @@ func main() {
 			}
 		}
 		if conn == nil {
-			fmt.Println("Failed to connect. Waiting 30 seconds.")
-			time.Sleep(30 * time.Second)
+			fmt.Println("Failed to connect. Waiting", SLEEP_RETRY, "seconds.")
+			time.Sleep(SLEEP_RETRY * time.Second)
 			continue
 		}
 

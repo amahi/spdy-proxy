@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"github.com/SlyMarbo/spdy"
 	"io"
@@ -144,7 +145,7 @@ func (p *Proxy) ServeC(w http.ResponseWriter, r *http.Request) {
 	client.Run()
 }
 
-func (p *Proxy) ServeH(w http.ResponseWriter, r *http.Request) {
+func (p *Proxy) ServeA(w http.ResponseWriter, r *http.Request) {
 	err := p.RequestFromC(w, r)
 	if err != nil {
 		fmt.Println("Encountered an error serving API request:", err)
@@ -155,15 +156,24 @@ func main() {
 	certFile := "cert.pem"
 	keyFile := "cert.key"
 
+	tls := flag.Bool("n", false, "disable TLS")
+	flag.Parse()
+
 	proxy := new(Proxy)
 	http.HandleFunc("/", proxy.ServeC)
 	go http.ListenAndServeTLS(HOST_PORT_SERVERS, certFile, keyFile, nil) // Serve C
 
 	hServe := new(http.Server)
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", proxy.ServeH)
+	mux.HandleFunc("/", proxy.ServeA)
 	hServe.Handler = mux
 	hServe.Addr = HOST_PORT_API
-	spdy.AddSPDY(hServe)
-	handle(hServe.ListenAndServeTLS(certFile, keyFile)) // Serve H
+	if *tls {
+		fmt.Println("Serving on", HOST_PORT_API, "*without* TLS")
+		handle(hServe.ListenAndServe()) // Serve H
+	} else {
+		fmt.Println("Serving on", HOST_PORT_API, "with TLS")
+		spdy.AddSPDY(hServe)
+		handle(hServe.ListenAndServeTLS(certFile, keyFile)) // Serve H
+	}
 }
