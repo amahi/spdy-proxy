@@ -26,7 +26,7 @@ func main() {
 		var err error
 		for i := 0; i < 10; i++ {
 			// connect to P.
-			conn, err := tls.Dial("tcp", HOST_PORT, &tls.Config{InsecureSkipVerify: true})
+			conn, err = tls.Dial("tcp", HOST_PORT, &tls.Config{InsecureSkipVerify: true})
 			if err != nil {
 				time.Sleep(100 * time.Millisecond)
 			} else {
@@ -38,7 +38,7 @@ func main() {
 			time.Sleep(30 * time.Second)
 			continue
 		}
-	
+
 		// build the request
 		buf := new(bytes.Buffer)
 		_, err = buf.WriteString("Hello from C")
