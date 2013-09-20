@@ -59,18 +59,18 @@ To add tests, see how these are added and follow the pattern. For control flow a
 Design
 ======
 
-The system works by creating a gateway between 1 connection to C and n connections to As.
+The system works by creating a gateway between `1` connection to `C` and `n` connections to `A`s.
 This uses Go's `net/http` package design to simplify the interfaces. The system starts by opening
-a port with which servers may connect. When a C connects, it does so as a client, with the proxy
-(P) fulfilling the role of server. At this point, a brief authentication phasetakes place, using
+a port with which servers may connect. When a `C` connects, it does so as a client, with the proxy
+(`P`) fulfilling the role of server. At this point, a brief authentication phasetakes place, using
 an HTTPS PUT request. Once this request has completed, the underlying TLS connection is hijacked
-by the application at both ends. This is then repurposed as a SPDY connection where C is the
-server and P is the client. This enables us to connect the two without opening a port at C.
+by the application at both ends. This is then repurposed as a SPDY connection where `C` is the
+server and `P` is the client. This enables us to connect the two without opening a port at `C`.
 
-At this point, we have a SPDY connection between C and P, so P is now ready to pass requests to C.
-When requests arrive at P, irrespective of their origin, the request and a callback are prepared
-and submitted to the SPDY connection. When response data arrives from C, this is passed on to the
-requesting client A by the created callback structure.
+At this point, we have a SPDY connection between `C` and `P`, so `P` is now ready to pass requests to `C`.
+When requests arrive at `P`, irrespective of their origin, the request and a callback are prepared
+and submitted to the SPDY connection. When response data arrives from `C`, this is passed on to the
+requesting client `A`n by the created callback structure.
 
 This separation of inputs and outputs should result in equal treatment of all requests (except where
 SPDY request priorities are used), which should give good usage performance.
