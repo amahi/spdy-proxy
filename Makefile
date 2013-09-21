@@ -8,3 +8,8 @@ build:
 
 clean:
 	rm -rf bin pkg
+
+update-lib:
+	git submodule init
+	git submodule update --merge
+	(cd src/github.com/SlyMarbo/spdy && git pull && git checkout master)
