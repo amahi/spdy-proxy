@@ -12,4 +12,4 @@ clean:
 update-lib:
 	git submodule init
 	git submodule update --merge
-	(cd src/github.com/SlyMarbo/spdy && git pull && git checkout master)
+	(cd src/github.com/SlyMarbo/spdy && git pull origin master && git checkout master)
