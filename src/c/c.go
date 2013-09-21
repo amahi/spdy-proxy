@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/tls"
+	"flag"
 	"fmt"
 	"github.com/SlyMarbo/spdy"
 	"io"
@@ -18,9 +19,12 @@ func handle(err error) {
 }
 
 const HOST_PORT = "localhost:1444"
-const DIR_TO_SERVE = "./media"
 
 func main() {
+
+	root := flag.String("r", "./media", "root of the directory to serve")
+	flag.Parse()
+
 	for {
 		const SLEEP_RETRY = 5
 		var conn *tls.Conn
@@ -46,7 +50,7 @@ func main() {
 		handle(err)
 		req, err := http.NewRequest("PUT", "https://"+HOST_PORT, buf)
 		handle(err)
-	
+
 		// make the client connection
 		client := httputil.NewClientConn(conn, nil)
 		res, err := client.Do(req)
@@ -58,12 +62,12 @@ func main() {
 		_, err = io.Copy(buf, res.Body)
 		handle(err)
 		fmt.Printf("%q from P: %q.\n", res.Status, buf.String())
-	
+
 		// swap
 		//spdy.EnableDebugOutput()
 		c, _ := client.Hijack()
 		conn = c.(*tls.Conn)
-		srv := &http.Server{Handler: http.FileServer(http.Dir(DIR_TO_SERVE))}
+		srv := &http.Server{Handler: http.FileServer(http.Dir(*root))}
 		spdy.AddSPDY(srv)
 		server, err := spdy.NewServerConn(conn, srv, 3)
 		if err != nil {
