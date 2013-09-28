@@ -167,7 +167,7 @@ func main() {
 	certFile := "cert.pem"
 	keyFile := "cert.key"
 
-	tls := flag.Bool("n", false, "disable TLS")
+	tls := flag.Bool("t", false, "enable TLS")
 	flag.Parse()
 
 	proxy := new(Proxy)
@@ -181,11 +181,11 @@ func main() {
 	hServe.Handler = mux
 	hServe.Addr = HOST_PORT_API
 	if *tls {
-		fmt.Println("Serving on", HOST_PORT_API, "*without* TLS")
-		handle(hServe.ListenAndServe()) // Serve H
-	} else {
 		fmt.Println("Serving on", HOST_PORT_API, "with TLS")
 		spdy.AddSPDY(hServe)
 		handle(hServe.ListenAndServeTLS(certFile, keyFile)) // Serve H
+	} else {
+		fmt.Println("Serving on", HOST_PORT_API, "*without* TLS")
+		handle(hServe.ListenAndServe()) // Serve H
 	}
 }
