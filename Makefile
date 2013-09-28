@@ -5,6 +5,7 @@ all: build
 build:
 	go get c
 	go get p
+	go get a
 
 clean:
 	rm -rf bin pkg

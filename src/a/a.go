@@ -9,6 +9,7 @@ import (
 )
 
 const BUFFER_SIZE = 256
+const SLEEP_TIME = 200
 
 func handle(err error) {
 	if err != nil {
@@ -33,7 +34,7 @@ func main() {
 			// EOF -- ignore the rest
 			break
 		}
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(SLEEP_TIME * time.Millisecond)
 	}
 
 	fmt.Printf("Received: %d bytes\n", copied)
