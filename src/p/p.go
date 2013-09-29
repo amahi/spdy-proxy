@@ -168,7 +168,13 @@ func main() {
 	keyFile := "cert.key"
 
 	tls := flag.Bool("t", false, "enable TLS")
+	spdy_debug := flag.Bool("s", false, "enable SPDY debug output")
 	flag.Parse()
+
+	if *spdy_debug {
+		// enable spdy debug messages
+		spdy.EnableDebugOutput()
+	}
 
 	proxy := new(Proxy)
 	http.HandleFunc("/", proxy.ServeC)
@@ -180,9 +186,9 @@ func main() {
 	mux.HandleFunc("/debug", proxy.DebugURL)
 	hServe.Handler = mux
 	hServe.Addr = HOST_PORT_API
+	spdy.AddSPDY(hServe)
 	if *tls {
 		fmt.Println("Serving on", HOST_PORT_API, "with TLS")
-		spdy.AddSPDY(hServe)
 		handle(hServe.ListenAndServeTLS(certFile, keyFile)) // Serve H
 	} else {
 		fmt.Println("Serving on", HOST_PORT_API, "*without* TLS")

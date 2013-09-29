@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-const BUFFER_SIZE = 256
-const SLEEP_TIME = 200
+const BUFFER_SIZE = 64
+const SLEEP_TIME = 2000
 
 func handle(err error) {
 	if err != nil {

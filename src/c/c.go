@@ -23,7 +23,13 @@ const HOST_PORT = "localhost:1444"
 func main() {
 
 	root := flag.String("r", "./media", "root of the directory to serve")
+	spdy_debug := flag.Bool("s", false, "enable SPDY debug output")
 	flag.Parse()
+
+	if *spdy_debug {
+		// enable spdy debug messages
+		spdy.EnableDebugOutput()
+	}
 
 	for {
 		const SLEEP_RETRY = 5
