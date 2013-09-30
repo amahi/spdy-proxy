@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
-	"github.com/SlyMarbo/spdy"
+	"github.com/amahi/spdy"
 	"io"
 	"net/http"
 	"net/http/httputil"

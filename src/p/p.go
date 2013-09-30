@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"github.com/SlyMarbo/spdy"
+	"github.com/amahi/spdy"
 	"io"
 	"net/http"
 	"strconv"
