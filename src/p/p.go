@@ -28,6 +28,7 @@ var stats stats_s
 type responseCopier struct {
 	w http.ResponseWriter
 	s spdy.Stream
+	sync.Mutex
 }
 
 func (r *responseCopier) ReceiveData(_ *http.Request, data []byte, final bool) {
@@ -36,7 +37,9 @@ func (r *responseCopier) ReceiveData(_ *http.Request, data []byte, final bool) {
 	}
 	_, err := r.w.Write(data)
 	if err != nil {
+		r.Lock()
 		r.s.Close()
+		r.Unlock()
 	}
 }
 
@@ -114,7 +117,9 @@ func (p *Proxy) RequestFromC(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+	copier.Lock()
 	copier.s = stream
+	copier.Unlock()
 	stats.Lock()
 	stats.serving++
 	stats.Unlock()
@@ -136,7 +141,7 @@ func (p *Proxy) ServeC(w http.ResponseWriter, r *http.Request) {
 	buf := new(buffer)
 	_, err := io.Copy(buf, r.Body)
 	handle(err)
-	// handle(r.Body.Close())
+	handle(r.Body.Close())
 	fmt.Printf("%q from C: %q.\n", r.Method, buf.String())
 
 	// re-purpose the connection.
