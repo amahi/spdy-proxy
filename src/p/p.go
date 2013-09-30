@@ -189,9 +189,9 @@ func main() {
 	spdy.AddSPDY(hServe)
 	if *tls {
 		fmt.Println("Serving on", HOST_PORT_API, "with TLS")
-		handle(hServe.ListenAndServeTLS(certFile, keyFile)) // Serve H
+		handle(hServe.ListenAndServeTLS(certFile, keyFile)) // Serve A
 	} else {
 		fmt.Println("Serving on", HOST_PORT_API, "*without* TLS")
-		handle(hServe.ListenAndServe()) // Serve H
+		handle(hServe.ListenAndServe()) // Serve A
 	}
 }
