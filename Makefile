@@ -7,6 +7,12 @@ build:
 	go get p
 	go get a
 
+race:
+	mkdir -p bin
+	go build -race p && mv p bin/
+	go build -race c && mv c bin/
+	go build -race a && mv a bin/
+
 clean:
 	rm -rf bin pkg
 

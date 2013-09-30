@@ -2,7 +2,7 @@
 
 # basic settings and functions
 
-base_url="https://localhost:1443"
+base_url="http://localhost:1443"
 
 debug=""
 # debug=-v

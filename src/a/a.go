@@ -9,7 +9,7 @@ import (
 )
 
 const BUFFER_SIZE = 64
-const SLEEP_TIME = 2000
+const SLEEP_TIME = 8000
 
 func handle(err error) {
 	if err != nil {

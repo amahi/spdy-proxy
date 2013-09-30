@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. functions
+. ./functions
 
 curl $debug -D /tmp/test.header -k -s -o /tmp/downloaded \
 	-H "Accept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3" \

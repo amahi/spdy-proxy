@@ -9,15 +9,22 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 const HOST_PORT_API = "localhost:1443"
 const HOST_PORT_SERVERS = "localhost:1444"
 
-var incoming, serving int
+type stats_s struct {
+	sync.Mutex
+	incoming int
+	serving int
+}
+
+var stats stats_s
 
 // responseCopier does the copying of the request
-// from H to C and the response from C to H.
+// from A to C and the response from C to A.
 type responseCopier struct {
 	w http.ResponseWriter
 	s spdy.Stream
@@ -100,16 +107,22 @@ func (p *Proxy) RequestFromC(w http.ResponseWriter, r *http.Request) error {
 	if u.Scheme == "" {
 		u.Scheme = "https"
 	}
-	incoming++
+	stats.Lock()
+	stats.incoming++
+	stats.Unlock()
 	stream, err := p.conn.Request(r, copier, spdy.DefaultPriority(r.URL))
 	if err != nil {
 		return err
 	}
 	copier.s = stream
-	serving++
+	stats.Lock()
+	stats.serving++
+	stats.Unlock()
 	ret := stream.Run()
-	incoming--
-	serving--
+	stats.Lock()
+	stats.incoming--
+	stats.serving--
+	stats.Unlock()
 	return ret
 }
 
@@ -123,7 +136,7 @@ func (p *Proxy) ServeC(w http.ResponseWriter, r *http.Request) {
 	buf := new(buffer)
 	_, err := io.Copy(buf, r.Body)
 	handle(err)
-	handle(r.Body.Close())
+	// handle(r.Body.Close())
 	fmt.Printf("%q from C: %q.\n", r.Method, buf.String())
 
 	// re-purpose the connection.
@@ -144,7 +157,7 @@ func (p *Proxy) ServeC(w http.ResponseWriter, r *http.Request) {
 	res.ContentLength = int64(len(message))
 	handle(res.Write(conn))
 
-	// prepare for serving requests from H.
+	// prepare for serving requests from A.
 	client, err := spdy.NewClientConn(conn, nil, 3)
 	handle(err)
 	p.conn = client
@@ -160,7 +173,9 @@ func (p *Proxy) ServeA(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Proxy) DebugURL(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "incoming: %d\nserving: %d\n", incoming, serving)
+	stats.Lock()
+	fmt.Fprintf(w, "incoming: %d\nserving: %d\n", stats.incoming, stats.serving)
+	stats.Unlock()
 }
 
 func main() {
@@ -189,9 +204,9 @@ func main() {
 	spdy.AddSPDY(hServe)
 	if *tls {
 		fmt.Println("Serving on", HOST_PORT_API, "with TLS")
-		handle(hServe.ListenAndServeTLS(certFile, keyFile)) // Serve A
+		handle(hServe.ListenAndServeTLS(certFile, keyFile)) // Serve H
 	} else {
 		fmt.Println("Serving on", HOST_PORT_API, "*without* TLS")
-		handle(hServe.ListenAndServe()) // Serve A
+		handle(hServe.ListenAndServe()) // Serve H
 	}
 }
