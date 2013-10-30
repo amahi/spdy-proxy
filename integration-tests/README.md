@@ -2,8 +2,11 @@ This is a small set of tests that exercise the client C and the proxy P.
 
 It requires:
  * C and P connected together and running:
+
    `bin/c`
+
    `bin/p`
+
  * Access to the media/ folder
 
 Once things are set up, run the tests with:
