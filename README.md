@@ -1,16 +1,16 @@
 SPDY Proxy
 ==========
 
-Reference implementation in [Go](http://golang.org/) of a proxy server for (semi-)permanently connected back-end servers, supporting SPDY and HTTPS.
+Reference implementation in [Go](http://golang.org/) of a proxy server for (semi-)permanently connected back-end servers, via SPDY.
 
-Thanks to Jamie Hall, David Anderson and Derrick McKee for their help and contributions to how this proxy server idea and implementation.
+Thanks to Jamie Hall and Derrick McKee for their help and contributions to how this proxy server idea and implementation.
 
-This project is an extracion from a larger Amahi project and Jamie did this code based on a description of how the Amahi project was architected. It uses Jamie's excellent [SlyMarbo/spdy](https://github.com/SlyMarbo/spdy/) SPDY library.
+This project is an extracion from a larger Amahi project. It uses Amahi's [amahi/spdy](https://github.com/amahi/spdy/) SPDY library.
 
 Intro
 =====
 
-This is a proxy server process P and a back-end client for it C.
+This is a proxy server process P and a back-end origin server for it C (which for historic reasons is called a "client", since it connects to P before becoming a server).
 
 The proxy P serves (on two ports) a client (front-end) API to serve requests from clients, called A.
 
