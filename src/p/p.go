@@ -7,8 +7,7 @@ import (
 	"github.com/amahi/spdy"
 	"io"
 	"net/http"
-	"strconv"
-	"strings"
+	"runtime"
 	"sync"
 )
 
@@ -18,58 +17,10 @@ const HOST_PORT_SERVERS = "localhost:1444"
 type stats_s struct {
 	sync.Mutex
 	incoming int
-	serving int
+	serving  int
 }
 
 var stats stats_s
-
-// responseCopier does the copying of the request
-// from A to C and the response from C to A.
-type responseCopier struct {
-	w http.ResponseWriter
-	s spdy.Stream
-	sync.Mutex
-}
-
-func (r *responseCopier) ReceiveData(_ *http.Request, data []byte, final bool) {
-	if data == nil || len(data) == 0 {
-		return
-	}
-	_, err := r.w.Write(data)
-	if err != nil {
-		r.Lock()
-		r.s.Close()
-		r.Unlock()
-	}
-}
-
-func (r *responseCopier) ReceiveHeader(_ *http.Request, header http.Header) {
-	h := r.w.Header()
-	status := -1
-	for key, values := range header {
-		for _, value := range values {
-			h.Add(key, value)
-			if key == ":status" {
-				if i := strings.Index(value, " "); i > 0 {
-					value = value[:i]
-				}
-				s, err := strconv.Atoi(value)
-				if err != nil {
-					fmt.Printf("Warning: Failed to parse status code %q.\n", value)
-					continue
-				}
-				status = s
-			}
-		}
-	}
-	if status > 0 {
-		r.w.WriteHeader(status)
-	}
-}
-
-func (r *responseCopier) ReceiveRequest(_ *http.Request) bool {
-	return false
-}
 
 // Used in sending the response.
 // Essentially, this is just adding
@@ -91,18 +42,16 @@ func handle(err error) {
 }
 
 type Proxy struct {
-	conn spdy.Conn
+	session *spdy.Session
 }
 
 func (p *Proxy) RequestFromC(w http.ResponseWriter, r *http.Request) error {
-	if p.conn == nil {
+	if p.session == nil {
 		fmt.Println("Warning: Could not serve request because C is not connected.")
 		http.NotFound(w, r)
 		return nil
 	}
 
-	copier := new(responseCopier)
-	copier.w = w
 	u := r.URL
 	if u.Host == "" {
 		u.Host = HOST_PORT_API
@@ -110,31 +59,14 @@ func (p *Proxy) RequestFromC(w http.ResponseWriter, r *http.Request) error {
 	if u.Scheme == "" {
 		u.Scheme = "https"
 	}
-	stats.Lock()
-	stats.incoming++
-	stats.Unlock()
-	stream, err := p.conn.Request(r, copier, spdy.DefaultPriority(r.URL))
-	if err != nil {
-		return err
-	}
-	copier.Lock()
-	copier.s = stream
-	copier.Unlock()
-	stats.Lock()
-	stats.serving++
-	stats.Unlock()
-	ret := stream.Run()
-	stats.Lock()
-	stats.incoming--
-	stats.serving--
-	stats.Unlock()
-	return ret
+	err := p.session.NewStreamProxy(r, w)
+	return err
 }
 
 func (p *Proxy) ServeC(w http.ResponseWriter, r *http.Request) {
 	// clean up the old connection
-	if p.conn != nil {
-		handle(p.conn.Close())
+	if p.session != nil {
+		p.session.Close()
 	}
 
 	// Read in the request body.
@@ -163,11 +95,10 @@ func (p *Proxy) ServeC(w http.ResponseWriter, r *http.Request) {
 	handle(res.Write(conn))
 
 	// prepare for serving requests from A.
-	client, err := spdy.NewClientConn(conn, nil, 3)
-	handle(err)
-	p.conn = client
+	session := spdy.NewClientSession(conn)
+	p.session = session
 	fmt.Println("Ready")
-	client.Run()
+	session.Serve()
 }
 
 func (p *Proxy) ServeA(w http.ResponseWriter, r *http.Request) {
@@ -179,6 +110,7 @@ func (p *Proxy) ServeA(w http.ResponseWriter, r *http.Request) {
 
 func (p *Proxy) DebugURL(w http.ResponseWriter, r *http.Request) {
 	stats.Lock()
+	fmt.Fprintf(w, "goroutines:  %d\n", runtime.NumGoroutine())
 	fmt.Fprintf(w, "incoming: %d\nserving: %d\n", stats.incoming, stats.serving)
 	stats.Unlock()
 }
@@ -193,7 +125,7 @@ func main() {
 
 	if *spdy_debug {
 		// enable spdy debug messages
-		spdy.EnableDebugOutput()
+		spdy.EnableDebug()
 	}
 
 	proxy := new(Proxy)
@@ -206,7 +138,9 @@ func main() {
 	mux.HandleFunc("/debug", proxy.DebugURL)
 	hServe.Handler = mux
 	hServe.Addr = HOST_PORT_API
-	spdy.AddSPDY(hServe)
+	// hServe.WriteTimeout = 10 * time.Second
+	// hServe.ReadTimeout = 10 * time.Second
+	// spdy.AddSPDY(hServe)
 	if *tls {
 		fmt.Println("Serving on", HOST_PORT_API, "with TLS")
 		handle(hServe.ListenAndServeTLS(certFile, keyFile)) // Serve H

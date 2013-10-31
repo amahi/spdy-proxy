@@ -2,7 +2,10 @@
 
 . ./functions
 
+# this tests timeouts, it uses a not so fast rate and takes about 30 seconds
+
 curl $debug -D /tmp/test.header -k -s -o /tmp/test.body \
+	--limit-rate 16384 \
 	-H "Accept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3" \
 	-H "Connection: keep-alive" \
 	-H "Host: localhost:1444" \

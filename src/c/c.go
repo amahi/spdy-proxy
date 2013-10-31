@@ -22,13 +22,13 @@ const HOST_PORT = "localhost:1444"
 
 func main() {
 
-	root := flag.String("r", "./media", "root of the directory to serve")
+	root := flag.String("r", "./testdata", "root of the directory to serve")
 	spdy_debug := flag.Bool("s", false, "enable SPDY debug output")
 	flag.Parse()
 
 	if *spdy_debug {
 		// enable spdy debug messages
-		spdy.EnableDebugOutput()
+		spdy.EnableDebug()
 	}
 
 	for {
@@ -69,21 +69,11 @@ func main() {
 		handle(err)
 		fmt.Printf("%q from P: %q.\n", res.Status, buf.String())
 
-		// swap
-		//spdy.EnableDebugOutput()
 		c, _ := client.Hijack()
 		conn = c.(*tls.Conn)
-		srv := &http.Server{Handler: http.FileServer(http.Dir(*root))}
-		spdy.AddSPDY(srv)
-		server, err := spdy.NewServerConn(conn, srv, 3)
-		if err != nil {
-			fmt.Println("Encountered error creating SPDY server connection:", err)
-			continue
-		}
-		fmt.Println("Ready")
-		err = server.Run()
-		if err != nil {
-			fmt.Println("Encountered error serving:", err, "\nReconnecting to proxy...")
-		}
+		server := new(http.Server)
+		server.Handler = http.FileServer(http.Dir(*root))
+		session := spdy.NewServerSession(conn, server)
+		session.Serve()
 	}
 }
