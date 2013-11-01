@@ -8,5 +8,5 @@ curl $debug -D /tmp/test.header -k -s -o /tmp/test.body \
 	-H "Host: localhost:1444" \
 	"$base_url/sample.mp4"
 
-valid_head 'ad86b41f562eb170832434b8ed0b7af09812f40c';
-valid_body 'dcff5a900a60c7615be5f74c145a6487bda02489';
+valid_head '8f89aa1928f5ea18968c8242516469e5f7ad7828';
+valid_body '94554f1f8edc402582faffab00ce620cc34809f8';
