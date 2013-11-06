@@ -1,4 +1,4 @@
-SPDY Proxy
+SPDY Proxy [![Build Status](https://travis-ci.org/amahi/spdy-proxy.png?branch=master)](https://travis-ci.org/amahi/spdy-proxy)
 ==========
 
 Reference implementation in [Go](http://golang.org/) of a proxy server for (semi-)permanently connected back-end servers, via SPDY.
