@@ -5,7 +5,7 @@ Reference implementation in [Go](http://golang.org/) of a proxy server for (semi
 
 Thanks to Jamie Hall and Derrick McKee for their help and contributions to how this proxy server idea and implementation.
 
-This project is an extracion from a larger Amahi project. It uses Amahi's [amahi/spdy](https://github.com/amahi/spdy/) SPDY library.
+This project is an extracion from a larger Amahi project. It uses Amahi's [amahi/spdy](https://github.com/amahi/spdy/) SPDY library. Amahi's service is now live and the [Amahi mobile iOS app](https://www.amahi.org/ios) has been released using the service.
 
 Intro
 =====
