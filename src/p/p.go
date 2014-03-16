@@ -38,7 +38,7 @@ func (b *buffer) Close() error {
 // placeholder for proper error handling.
 func handle(err error) {
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 }
 
@@ -134,7 +134,10 @@ func main() {
 	proxy := new(Proxy)
 	http.HandleFunc("/", proxy.ServeC)
 
-	go handle(http.ListenAndServeTLS(HOST_PORT_SERVERS, certFile, keyFile, nil)) // Serve C
+	go func(){ // Serve C
+		err := http.ListenAndServeTLS(HOST_PORT_SERVERS, certFile, keyFile, nil)
+		handle(err)
+	}()
 
 	hServe := new(http.Server)
 	mux := http.NewServeMux()
