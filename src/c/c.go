@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/amahi/spdy"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"time"
@@ -14,7 +15,7 @@ import (
 
 func handle(err error) {
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }
 
@@ -45,7 +46,7 @@ func main() {
 			}
 		}
 		if conn == nil {
-			fmt.Println("Failed to connect. Waiting", SLEEP_RETRY, "seconds.")
+			log.Println("Failed to connect. Waiting", SLEEP_RETRY, "seconds.")
 			time.Sleep(SLEEP_RETRY * time.Second)
 			continue
 		}
@@ -61,7 +62,7 @@ func main() {
 		client := httputil.NewClientConn(conn, nil)
 		res, err := client.Do(req)
 		if err != nil {
-			fmt.Println("Error: Failed to make connection to P:", err)
+			log.Println("Error: Failed to make connection to P:", err)
 			continue
 		}
 		buf.Reset()
