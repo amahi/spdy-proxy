@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/amahi/spdy"
 	"io"
+	"log"
 	"net/http"
 	"runtime"
 	"sync"
@@ -47,7 +48,7 @@ type Proxy struct {
 
 func (p *Proxy) RequestFromC(w http.ResponseWriter, r *http.Request) error {
 	if p.session == nil {
-		fmt.Println("Warning: Could not serve request because C is not connected.")
+		log.Println("Warning: Could not serve request because C is not connected.")
 		http.NotFound(w, r)
 		return nil
 	}
@@ -81,17 +82,19 @@ func (p *Proxy) ServeC(w http.ResponseWriter, r *http.Request) {
 	handle(err)
 
 	// send the 200 to C.
-	res := new(http.Response)
-	res.Status = "200 Connection Established"
-	res.StatusCode = 200
-	res.Proto = "HTTP/1.1"
-	res.ProtoMajor = 1
-	res.ProtoMinor = 1
 	buf.Reset()
-	message := "Hello from P"
-	buf.WriteString(message)
-	res.Body = buf
-	res.ContentLength = int64(len(message))
+	buf.WriteString("Hello from P")
+
+	res := &http.Response{
+		Status:        "200 Connection Established",
+		StatusCode:    200,
+		Proto:         "HTTP/1.1",
+		ProtoMajor:    1,
+		ProtoMinor:    1,
+		Body:          buf,
+		ContentLength: int64(buf.Len()),
+	}
+
 	handle(res.Write(conn))
 
 	// prepare for serving requests from A.
@@ -104,7 +107,7 @@ func (p *Proxy) ServeC(w http.ResponseWriter, r *http.Request) {
 func (p *Proxy) ServeA(w http.ResponseWriter, r *http.Request) {
 	err := p.RequestFromC(w, r)
 	if err != nil {
-		fmt.Println("Encountered an error serving API request:", err)
+		log.Println("Encountered an error serving API request:", err)
 	}
 }
 
@@ -130,7 +133,11 @@ func main() {
 
 	proxy := new(Proxy)
 	http.HandleFunc("/", proxy.ServeC)
-	go http.ListenAndServeTLS(HOST_PORT_SERVERS, certFile, keyFile, nil) // Serve C
+
+	go func(){ // Serve C
+		err := http.ListenAndServeTLS(HOST_PORT_SERVERS, certFile, keyFile, nil)
+		handle(err)
+	}()
 
 	hServe := new(http.Server)
 	mux := http.NewServeMux()
