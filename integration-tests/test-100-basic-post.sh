@@ -2,7 +2,7 @@
 
 . ./functions
 
-curl $debug -D /tmp/test.header -k -s -o /tmp/test-unsorted.body \
+curl $debug -D /tmp/test-unsorted.header -l -k -s -o /tmp/test-unsorted.body \
 	-H "Accept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3" \
 	-H "Connection: keep-alive" \
 	-H "Host: localhost:1443" \
@@ -11,7 +11,8 @@ curl $debug -D /tmp/test.header -k -s -o /tmp/test-unsorted.body \
 
 # the order of the files returned is based on the inode order and may change in each system
 # this works around that
-#sort /tmp/test-unsorted.body > /tmp/test.body
+sort /tmp/test-unsorted.body > /tmp/test.body
+sort /tmp/test-unsorted.header > /tmp/test.header
 
-#valid_head '57c7644f36d06a104d40efcd2b925fa408fd2082';
-#valid_body 'edd16e957becc92b2beed5a42b77cfedeaebf0c1';
+#valid_head '62bde673bbe165824839e10364e759b36af6be0b';
+valid_body '3f71d544d4b153fc80474a9724b0cddd04f1b971';
