@@ -26,9 +26,10 @@ Once A ends the connection, C's SPDY connection is kept and reused for any other
 	^
 	|
 	v
-	C	Client device that semi-permanently connect to P, then become Servers for A
+	C	Client "origin server"
+	
+The origin server semi-permanently connects to P (it reconnects in case of failures), then becomes a server for A
 
-Both the server to A and the interface with C support SPDY.
 
 Testing
 =======
@@ -75,4 +76,4 @@ requesting client `A`n by the created callback structure.
 This separation of inputs and outputs should result in equal treatment of all requests (except where
 SPDY request priorities are used), which should give good usage performance.
 
-(C) 2013, Amahi
+(C) 2014, Amahi
