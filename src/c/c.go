@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httputil"
+	"os"
 	"time"
 )
 
@@ -17,6 +18,32 @@ func handle(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+type handler struct {
+        data []byte
+        rt string
+}
+func (h *handler) ServeHTTP(rw http.ResponseWriter,rq *http.Request) {
+        if rq.Body!=nil {
+                h.data = make([]byte, int(rq.ContentLength))
+                _,err := rq.Body.(io.Reader).Read(h.data)
+                if err != nil {
+                        fmt.Println(err)
+                }
+                filename := "/tmp/postdat"
+                f, err := os.Create(filename)
+                if err != nil {
+                        fmt.Println(err)
+                }
+                n, err := f.Write(h.data)
+                if err != nil {
+                        fmt.Println(n, err)
+                }
+                f.Close()
+        }
+        fileserver := http.FileServer(http.Dir(h.rt))
+        fileserver.ServeHTTP(rw, rq)
 }
 
 const HOST_PORT = "localhost:1444"
@@ -73,7 +100,8 @@ func main() {
 		c, _ := client.Hijack()
 		conn = c.(*tls.Conn)
 		server := new(http.Server)
-		server.Handler = http.FileServer(http.Dir(*root))
+		server.Handler = &handler{data:nil,rt:*root}
+		//http.FileServer(http.Dir(*root))
 		session := spdy.NewServerSession(conn, server)
 		session.Serve()
 	}
