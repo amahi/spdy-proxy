@@ -17,7 +17,7 @@ sort --dictionary /tmp/test-unsorted.header > /tmp/test.header
 #valid_head '62bde673bbe165824839e10364e759b36af6be0b';
 valid_body '3f71d544d4b153fc80474a9724b0cddd04f1b971';
 
-go run post-test/post-test.go -name="/tmp/postdat2" -data="hello=world"
+echo -n "hello=world" > /tmp/postdat2
 
 echo -n "Data Receive: "
 check_same "/tmp/postdat" "/tmp/postdat2"
