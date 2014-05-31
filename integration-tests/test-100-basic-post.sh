@@ -19,5 +19,5 @@ valid_body '3f71d544d4b153fc80474a9724b0cddd04f1b971';
 
 go run post-test/post-test.go -name="/tmp/postdat2" -data="hello=world"
 
-echo -n "Data Receive: "
+echo -n "Data Recieve: "
 check_same "/tmp/postdat" "/tmp/postdat2"
