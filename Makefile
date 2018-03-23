@@ -7,9 +7,6 @@ build:
 	go get p
 	go get a
 
-get-deps:
-	go get -d
-
 race:
 	mkdir -p bin
 	go build -race p && mv p bin/
