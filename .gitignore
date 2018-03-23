@@ -22,3 +22,10 @@ _testmain.go
 *.exe
 bin
 pkg
+
+# Mac
+.DS_Store
+
+# IntelliJ
+*.iml
+.idea/*

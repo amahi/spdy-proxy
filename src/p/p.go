@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"github.com/amahi/spdy"
 	"io"
 	"log"
 	"net/http"
 	"runtime"
 	"sync"
+	"golang.org/x/net/http2"
 )
 
 const HOST_PORT_API = "localhost:1443"
@@ -43,11 +43,11 @@ func handle(err error) {
 }
 
 type Proxy struct {
-	session *spdy.Session
+	clientConn *http2.ClientConn
 }
 
 func (p *Proxy) RequestFromC(w http.ResponseWriter, r *http.Request) error {
-	if p.session == nil {
+	if p.clientConn == nil {
 		log.Println("Warning: Could not serve request because C is not connected.")
 		http.NotFound(w, r)
 		return nil
@@ -60,14 +60,22 @@ func (p *Proxy) RequestFromC(w http.ResponseWriter, r *http.Request) error {
 	if u.Scheme == "" {
 		u.Scheme = "https"
 	}
-	err := p.session.NewStreamProxy(r, w)
+
+	res, err := p.clientConn.RoundTrip(r)
+	handle(err)
+
+	_, err = io.Copy(w, res.Body)
+	handle(err)
+	handle(res.Body.Close())
+
 	return err
 }
 
 func (p *Proxy) ServeC(w http.ResponseWriter, r *http.Request) {
 	// clean up the old connection
-	if p.session != nil {
-		p.session.Close()
+	if p.clientConn != nil {
+		// p.clientConn.Close()
+		// Close() func not yet implemented -> https://github.com/golang/go/issues/17292
 	}
 
 	// Read in the request body.
@@ -98,10 +106,10 @@ func (p *Proxy) ServeC(w http.ResponseWriter, r *http.Request) {
 	handle(res.Write(conn))
 
 	// prepare for serving requests from A.
-	session := spdy.NewClientSession(conn)
-	p.session = session
+	transport := new(http2.Transport)
+	p.clientConn, err = transport.NewClientConn(conn)
+	handle(err)
 	fmt.Println("Ready")
-	session.Serve()
 }
 
 func (p *Proxy) ServeA(w http.ResponseWriter, r *http.Request) {
@@ -123,18 +131,12 @@ func main() {
 	keyFile := "cert.key"
 
 	tls := flag.Bool("t", false, "enable TLS")
-	spdy_debug := flag.Bool("s", false, "enable SPDY debug output")
 	flag.Parse()
-
-	if *spdy_debug {
-		// enable spdy debug messages
-		spdy.EnableDebug()
-	}
 
 	proxy := new(Proxy)
 	http.HandleFunc("/", proxy.ServeC)
 
-	go func(){ // Serve C
+	go func() { // Serve C
 		err := http.ListenAndServeTLS(HOST_PORT_SERVERS, certFile, keyFile, nil)
 		handle(err)
 	}()
@@ -147,7 +149,7 @@ func main() {
 	hServe.Addr = HOST_PORT_API
 	// hServe.WriteTimeout = 10 * time.Second
 	// hServe.ReadTimeout = 10 * time.Second
-	// spdy.AddSPDY(hServe)
+
 	if *tls {
 		fmt.Println("Serving on", HOST_PORT_API, "with TLS")
 		handle(hServe.ListenAndServeTLS(certFile, keyFile)) // Serve H
