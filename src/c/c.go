@@ -1,17 +1,17 @@
 package main
 
 import (
-"bytes"
-"crypto/tls"
-"flag"
-"fmt"
-"io"
-"log"
-"net/http"
-"net/http/httputil"
-"os"
-"time"
-"golang.org/x/net/http2"
+	"bytes"
+	"crypto/tls"
+	"flag"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"net/http/httputil"
+	"time"
+	"golang.org/x/net/http2"
+	"io/ioutil"
 )
 
 func handle(err error) {
@@ -21,30 +21,20 @@ func handle(err error) {
 }
 
 type handler struct {
-	data []byte
 	rt string
 }
-func (h *handler) ServeHTTP(rw http.ResponseWriter,rq *http.Request) {
-	
-	if rq.Body!=nil {
-		h.data = make([]byte, int(rq.ContentLength))
-		_,err := rq.Body.(io.Reader).Read(h.data)
-		if err != nil {
-			fmt.Println(err)
-		}
+
+func (h *handler) ServeHTTP(rw http.ResponseWriter, rq *http.Request) {
+
+	if body, err := ioutil.ReadAll(rq.Body); err == nil && len(body) > 0 {
 		filename := "/tmp/postdat"
-		f, err := os.Create(filename)
+		err := ioutil.WriteFile(filename, body, 0666)
 		if err != nil {
 			fmt.Println(err)
 		}
-		n, err := f.Write(h.data)
-		if err != nil {
-			fmt.Println(n, err)
-		}
-		f.Close()
 	}
-	fileserver := http.FileServer(http.Dir(h.rt))
-	fileserver.ServeHTTP(rw, rq)
+	fileServer := http.FileServer(http.Dir(h.rt))
+	fileServer.ServeHTTP(rw, rq)
 }
 
 const HOST_PORT = "localhost:1444"
@@ -95,7 +85,8 @@ func main() {
 		c, _ := client.Hijack()
 		conn = c.(*tls.Conn)
 
-		serverConnOpts := &http2.ServeConnOpts{Handler: &handler{data:nil,rt:*root}}
+		serverConnOpts := new(http2.ServeConnOpts)
+		serverConnOpts.Handler = &handler{rt: *root}
 		server := new(http2.Server)
 		server.ServeConn(conn, serverConnOpts)
 	}

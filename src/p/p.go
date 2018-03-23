@@ -12,8 +12,8 @@ import (
 	"golang.org/x/net/http2"
 )
 
-const HOST_PORT_API = "0.0.0.0:1443"
-const HOST_PORT_SERVERS = "0.0.0.0:1444"
+const HOST_PORT_API = "localhost:1443"
+const HOST_PORT_SERVERS = "localhost:1444"
 
 type stats_s struct {
 	sync.Mutex
@@ -60,14 +60,13 @@ func (p *Proxy) RequestFromC(w http.ResponseWriter, r *http.Request) error {
 	if u.Scheme == "" {
 		u.Scheme = "https"
 	}
-	// err := p.session.NewStreamProxy(r, w)
-	res, err := p.clientConn.RoundTrip(r)
 
-	buf := new(buffer)
-	_, err = io.Copy(buf, res.Body)
+	res, err := p.clientConn.RoundTrip(r)
+	handle(err)
+
+	_, err = io.Copy(w, res.Body)
 	handle(err)
 	handle(res.Body.Close())
-	fmt.Printf("Reply from C: %q.\n", buf.String())
 
 	return err
 }
@@ -76,6 +75,7 @@ func (p *Proxy) ServeC(w http.ResponseWriter, r *http.Request) {
 	// clean up the old connection
 	if p.clientConn != nil {
 		// p.clientConn.Close()
+		// Close() func not yet implemented -> https://github.com/golang/go/issues/17292
 	}
 
 	// Read in the request body.
@@ -107,7 +107,8 @@ func (p *Proxy) ServeC(w http.ResponseWriter, r *http.Request) {
 
 	// prepare for serving requests from A.
 	transport := new(http2.Transport)
-	p.clientConn, err = transport.NewClientConn(conn) 
+	p.clientConn, err = transport.NewClientConn(conn)
+	handle(err)
 	fmt.Println("Ready")
 }
 
@@ -135,7 +136,7 @@ func main() {
 	proxy := new(Proxy)
 	http.HandleFunc("/", proxy.ServeC)
 
-	go func(){ // Serve C
+	go func() { // Serve C
 		err := http.ListenAndServeTLS(HOST_PORT_SERVERS, certFile, keyFile, nil)
 		handle(err)
 	}()
@@ -148,7 +149,7 @@ func main() {
 	hServe.Addr = HOST_PORT_API
 	// hServe.WriteTimeout = 10 * time.Second
 	// hServe.ReadTimeout = 10 * time.Second
-	// spdy.AddSPDY(hServe)
+
 	if *tls {
 		fmt.Println("Serving on", HOST_PORT_API, "with TLS")
 		handle(hServe.ListenAndServeTLS(certFile, keyFile)) // Serve H
