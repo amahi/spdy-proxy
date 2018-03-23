@@ -1,17 +1,17 @@
 package main
 
 import (
-	"bytes"
-	"crypto/tls"
-	"flag"
-	"fmt"
-	"github.com/amahi/spdy"
-	"io"
-	"log"
-	"net/http"
-	"net/http/httputil"
-	"os"
-	"time"
+"bytes"
+"crypto/tls"
+"flag"
+"fmt"
+"io"
+"log"
+"net/http"
+"net/http/httputil"
+"os"
+"time"
+"golang.org/x/net/http2"
 )
 
 func handle(err error) {
@@ -21,29 +21,30 @@ func handle(err error) {
 }
 
 type handler struct {
-        data []byte
-        rt string
+	data []byte
+	rt string
 }
 func (h *handler) ServeHTTP(rw http.ResponseWriter,rq *http.Request) {
-        if rq.Body!=nil {
-                h.data = make([]byte, int(rq.ContentLength))
-                _,err := rq.Body.(io.Reader).Read(h.data)
-                if err != nil {
-                        fmt.Println(err)
-                }
-                filename := "/tmp/postdat"
-                f, err := os.Create(filename)
-                if err != nil {
-                        fmt.Println(err)
-                }
-                n, err := f.Write(h.data)
-                if err != nil {
-                        fmt.Println(n, err)
-                }
-                f.Close()
-        }
-        fileserver := http.FileServer(http.Dir(h.rt))
-        fileserver.ServeHTTP(rw, rq)
+	
+	if rq.Body!=nil {
+		h.data = make([]byte, int(rq.ContentLength))
+		_,err := rq.Body.(io.Reader).Read(h.data)
+		if err != nil {
+			fmt.Println(err)
+		}
+		filename := "/tmp/postdat"
+		f, err := os.Create(filename)
+		if err != nil {
+			fmt.Println(err)
+		}
+		n, err := f.Write(h.data)
+		if err != nil {
+			fmt.Println(n, err)
+		}
+		f.Close()
+	}
+	fileserver := http.FileServer(http.Dir(h.rt))
+	fileserver.ServeHTTP(rw, rq)
 }
 
 const HOST_PORT = "localhost:1444"
@@ -51,13 +52,7 @@ const HOST_PORT = "localhost:1444"
 func main() {
 
 	root := flag.String("r", "./testdata", "root of the directory to serve")
-	spdy_debug := flag.Bool("s", false, "enable SPDY debug output")
 	flag.Parse()
-
-	if *spdy_debug {
-		// enable spdy debug messages
-		spdy.EnableDebug()
-	}
 
 	for {
 		const SLEEP_RETRY = 5
@@ -99,10 +94,9 @@ func main() {
 
 		c, _ := client.Hijack()
 		conn = c.(*tls.Conn)
-		server := new(http.Server)
-		server.Handler = &handler{data:nil,rt:*root}
-		//http.FileServer(http.Dir(*root))
-		session := spdy.NewServerSession(conn, server)
-		session.Serve()
+
+		serverConnOpts := &http2.ServeConnOpts{Handler: &handler{data:nil,rt:*root}}
+		server := new(http2.Server)
+		server.ServeConn(conn, serverConnOpts)
 	}
 }
